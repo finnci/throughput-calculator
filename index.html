@@ -233,6 +233,8 @@
       <div class="field"><label>Requests / minute (RPM)</label><input type="number" id="rpm" placeholder="e.g. 600" min="0" step="any" /></div>
       <div class="field"><label>Requests / hour (RPH)</label><input type="number" id="rph" placeholder="e.g. 36 000" min="0" step="any" /></div>
       <div class="field"><label>Requests / day (RPD)</label><input type="number" id="rpd" placeholder="e.g. 864 000" min="0" step="any" /></div>
+      <div class="field"><label>Requests / week (RPW)</label><input type="number" id="rpw" placeholder="e.g. 6.05M" min="0" step="any" /></div>
+      <div class="field"><label>Requests / year (RPY)</label><input type="number" id="rpy" placeholder="e.g. 315M" min="0" step="any" /></div>
     </div>
 
     <div class="divider"></div>
@@ -248,8 +250,8 @@
   </div>
 
   <script>
-    const ids = ['rps','rpm','rph','rpd'];
-    const factors = [1, 60, 3600, 86400];
+    const ids = ['rps','rpm','rph','rpd','rpw','rpy'];
+    const factors = [1, 60, 3600, 86400, 604800, 31536000];
     let baseRps = 0;
     let instances = 1;
 
@@ -272,22 +274,22 @@
     function renderResults() {
       const el = document.getElementById('results');
       if (baseRps === 0 || isNaN(baseRps)) { el.innerHTML = ''; return; }
-      const sRPS = baseRps, sRPM = baseRps*60, sRPH = baseRps*3600, sRPD = baseRps*86400;
-      const tRPS = baseRps*instances, tRPM = tRPS*60, tRPH = tRPS*3600, tRPD = tRPS*86400;
+      const sRPS = baseRps, sRPM = baseRps*60, sRPH = baseRps*3600, sRPD = baseRps*86400, sRPW = baseRps*604800, sRPY = baseRps*31536000;
+      const tRPS = baseRps*instances, tRPM = tRPS*60, tRPH = tRPS*3600, tRPD = tRPS*86400, tRPW = tRPS*604800, tRPY = tRPS*31536000;
       let html = '';
       if (instances > 1) {
         html += `<div class="section-head"><p class="section-label">Per node</p><span class="badge">1 instance</span></div>`;
         html += `<div class="cards-grid" style="margin-bottom:1.5rem">
-          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}
+          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}${card('Requests / week', sRPW)}${card('Requests / year', sRPY)}
         </div>`;
         html += `<div class="section-head"><p class="section-label">Total system</p><span class="badge">${instances} instances</span></div>`;
         html += `<div class="cards-grid">
-          ${card('Requests / sec', tRPS, true)}${card('Requests / min', tRPM, true)}${card('Requests / hour', tRPH, true)}${card('Requests / day', tRPD, true)}
+          ${card('Requests / sec', tRPS, true)}${card('Requests / min', tRPM, true)}${card('Requests / hour', tRPH, true)}${card('Requests / day', tRPD, true)}${card('Requests / week', tRPW, true)}${card('Requests / year', tRPY, true)}
         </div>`;
       } else {
         html += `<p class="section-label" style="margin-top:1.5rem">Throughput</p>`;
         html += `<div class="cards-grid">
-          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}
+          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}${card('Requests / week', sRPW)}${card('Requests / year', sRPY)}
         </div>`;
       }
       el.innerHTML = html;
