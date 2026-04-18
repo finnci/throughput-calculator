@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPS Throughput Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-info: #e6f1fb;
+      --text-primary: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --text-info: #185fa5;
+      --border: rgba(0,0,0,0.15);
+      --border-secondary: rgba(0,0,0,0.25);
+      --border-primary: rgba(0,0,0,0.35);
+      --border-info: rgba(24,95,165,0.4);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-info: #042c53;
+        --text-primary: #f0ede8;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --text-info: #85b7eb;
+        --border: rgba(255,255,255,0.12);
+        --border-secondary: rgba(255,255,255,0.22);
+        --border-primary: rgba(255,255,255,0.32);
+        --border-info: rgba(133,183,235,0.4);
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 15px;
+      font-weight: 500;
+      border: 0.5px solid var(--border-secondary);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: var(--font);
+    }
+
+    .field input:focus {
+      border-color: var(--border-primary);
+      box-shadow: 0 0 0 2px rgba(128,128,128,0.12);
+    }
+
+    .field input.active {
+      border-color: var(--border-info);
+      background: var(--bg-info);
+      color: var(--text-info);
+    }
+
+    .divider {
+      height: 0.5px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .instances-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 1.5rem;
+    }
+
+    .instances-row label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .instances-row input[type=range] {
+      flex: 1;
+      accent-color: var(--text-info);
+    }
+
+    .inst-num {
+      width: 64px;
+      padding: 6px 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 0.5px solid var(--border-secondary);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text-primary);
+      outline: none;
+      font-family: var(--font);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+    }
+
+    .card.highlighted {
+      background: var(--bg-info);
+      border: 0.5px solid var(--border-info);
+    }
+
+    .c-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .highlighted .c-label {
+      color: var(--text-info);
+    }
+
+    .c-val {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .highlighted .c-val {
+      color: var(--text-info);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      margin-top: 1.5rem;
+    }
+
+    .section-head .section-label {
+      margin: 0;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 0.5px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Throughput Calculator</h1>
+    <p class="subtitle">Enter any one value — the rest update automatically.</p>
+
+    <p class="section-label">Input — enter any one value</p>
+    <div class="input-grid">
+      <div class="field"><label>Requests / second (RPS)</label><input type="number" id="rps" placeholder="e.g. 10" min="0" step="any" /></div>
+      <div class="field"><label>Requests / minute (RPM)</label><input type="number" id="rpm" placeholder="e.g. 600" min="0" step="any" /></div>
+      <div class="field"><label>Requests / hour (RPH)</label><input type="number" id="rph" placeholder="e.g. 36 000" min="0" step="any" /></div>
+      <div class="field"><label>Requests / day (RPD)</label><input type="number" id="rpd" placeholder="e.g. 864 000" min="0" step="any" /></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="section-label">Scale</p>
+    <div class="instances-row">
+      <label>Instances</label>
+      <input type="range" id="inst-range" min="1" max="100" value="1" step="1" />
+      <input type="number" id="inst-num" class="inst-num" value="1" min="1" />
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const ids = ['rps','rpm','rph','rpd'];
+    const factors = [1, 60, 3600, 86400];
+    let baseRps = 0;
+    let instances = 1;
+
+    function fmt(n) {
+      if (n === 0) return '0';
+      if (n >= 1e9) return (n/1e9).toLocaleString(undefined,{maximumFractionDigits:2}) + 'B';
+      if (n >= 1e6) return (n/1e6).toLocaleString(undefined,{maximumFractionDigits:2}) + 'M';
+      if (n >= 1e3) return (n/1e3).toLocaleString(undefined,{maximumFractionDigits:2}) + 'K';
+      if (n < 1 && n > 0) return n.toFixed(4).replace(/\.?0+$/,'');
+      return n.toLocaleString(undefined,{maximumFractionDigits:2});
+    }
+
+    function card(label, val, hi) {
+      return `<div class="card${hi?' highlighted':''}">
+        <div class="c-label">${label}</div>
+        <div class="c-val">${fmt(val)}</div>
+      </div>`;
+    }
+
+    function renderResults() {
+      const el = document.getElementById('results');
+      if (baseRps === 0 || isNaN(baseRps)) { el.innerHTML = ''; return; }
+      const sRPS = baseRps, sRPM = baseRps*60, sRPH = baseRps*3600, sRPD = baseRps*86400;
+      const tRPS = baseRps*instances, tRPM = tRPS*60, tRPH = tRPS*3600, tRPD = tRPS*86400;
+      let html = '';
+      if (instances > 1) {
+        html += `<div class="section-head"><p class="section-label">Per node</p><span class="badge">1 instance</span></div>`;
+        html += `<div class="cards-grid" style="margin-bottom:1.5rem">
+          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}
+        </div>`;
+        html += `<div class="section-head"><p class="section-label">Total system</p><span class="badge">${instances} instances</span></div>`;
+        html += `<div class="cards-grid">
+          ${card('Requests / sec', tRPS, true)}${card('Requests / min', tRPM, true)}${card('Requests / hour', tRPH, true)}${card('Requests / day', tRPD, true)}
+        </div>`;
+      } else {
+        html += `<p class="section-label" style="margin-top:1.5rem">Throughput</p>`;
+        html += `<div class="cards-grid">
+          ${card('Requests / sec', sRPS)}${card('Requests / min', sRPM)}${card('Requests / hour', sRPH)}${card('Requests / day', sRPD)}
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function handleInput(id) {
+      return function() {
+        const raw = parseFloat(this.value);
+        ids.forEach(oid => document.getElementById(oid).classList.remove('active'));
+        if (isNaN(raw) || this.value === '') {
+          baseRps = 0;
+          ids.forEach(oid => { if (oid !== id) document.getElementById(oid).value = ''; });
+          renderResults();
+          return;
+        }
+        document.getElementById(id).classList.add('active');
+        baseRps = raw / factors[ids.indexOf(id)];
+        ids.forEach(oid => {
+          if (oid === id) return;
+          const v = baseRps * factors[ids.indexOf(oid)];
+          document.getElementById(oid).value = v < 1 && v > 0 ? v.toFixed(6).replace(/\.?0+$/,'') : parseFloat(v.toFixed(4));
+        });
+        renderResults();
+      };
+    }
+
+    ids.forEach(id => document.getElementById(id).addEventListener('input', handleInput(id)));
+
+    function setInstances(v) {
+      instances = Math.max(1, Math.round(v));
+      document.getElementById('inst-range').value = Math.min(instances, 100);
+      document.getElementById('inst-num').value = instances;
+      renderResults();
+    }
+
+    document.getElementById('inst-range').addEventListener('input', function() { setInstances(this.value); });
+    document.getElementById('inst-num').addEventListener('input', function() { setInstances(this.value); });
+  </script>
+</body>
+</html>
